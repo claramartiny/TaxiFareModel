@@ -51,6 +51,7 @@ class Trainer(object):
         y_pred = self.pipeline.predict(X_test)
         rmse = compute_rmse(y_pred, y_test)
         self.mlflow_log_metric('rmse',rmse)
+        self.mlflow_log_param("model", 'linear')
         return round(rmse,2)
     
     @memoized_property
