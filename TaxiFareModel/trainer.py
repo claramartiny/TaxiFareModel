@@ -8,13 +8,15 @@ from TaxiFareModel.utils import compute_rmse
 from memoized_property import memoized_property
 import mlflow
 from  mlflow.tracking import MlflowClient
-
+from sklearn.model_selection import train_test_split
+from TaxiFareModel.data import get_data, clean_data
 
 MLFLOW_URI = "https://mlflow.lewagon.co/"
 myname = "clara"
 EXPERIMENT_NAME = f"TaxifareModel_{myname}"
 
 class Trainer():
+
     def __init__(self, X, y):
         """
             X: pandas DataFrame
@@ -23,8 +25,6 @@ class Trainer():
         self.pipeline = None
         self.X = X
         self.y = y
-
-        self.mlflow_log_param(param, value)
 
     def set_pipeline(self):
         """defines the pipeline as a class attribute"""
@@ -70,13 +70,9 @@ class Trainer():
         self.mlflow_client.log_metric(self.mlflow_run.info.run_id, key, value)
     
     def train(self):
-
-        for model in ["linear", "Randomforest"]:
-            self.mlflow_create_run()
-            self.mlflow_log_metric("rmse", 4.5)
-            self.mlflow_log_param("model", model)
-
-
+        rmse = self.evaluate()
+        self.mlflow_log_metric('rmse', rmse)
+        
 if __name__ == "__main__":
     # get data
     # clean data
@@ -84,4 +80,13 @@ if __name__ == "__main__":
     # hold out
     # train
     # evaluate
-    print('TODO')
+    N = 10_000
+    df = get_data(nrows=N)
+    df = clean_data(df)
+    y = df["fare_amount"]
+    X = df.drop("fare_amount", axis=1)
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
+    trainer = Trainer(X_train, y_train)
+    trainer.run()
+    trainer.evaluate(X_test, y_test)
