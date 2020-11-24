@@ -15,7 +15,7 @@ MLFLOW_URI = "https://mlflow.lewagon.co/"
 myname = "clara"
 EXPERIMENT_NAME = f"TaxifareModel_{myname}"
 
-class Trainer():
+class Trainer(object):
 
     def __init__(self, X, y):
         """
@@ -25,6 +25,10 @@ class Trainer():
         self.pipeline = None
         self.X = X
         self.y = y
+
+    def set_experiment_name(self, experiment_name):
+        '''defines the experiment name for MLFlow'''
+        self.experiment_name = experiment_name
 
     def set_pipeline(self):
         """defines the pipeline as a class attribute"""
@@ -45,7 +49,9 @@ class Trainer():
     def evaluate(self, X_test, y_test):
         """evaluates the pipeline on df_test and return the RMSE"""
         y_pred = self.pipeline.predict(X_test)
-        return compute_rmse(y_pred, y_test)
+        rmse = compute_rmse(y_pred, y_test)
+        self.mlflow_log_metric('rmse',rmse)
+        return round(rmse,2)
     
     @memoized_property
     def mlflow_client(self):
@@ -68,11 +74,8 @@ class Trainer():
 
     def mlflow_log_metric(self, key, value):
         self.mlflow_client.log_metric(self.mlflow_run.info.run_id, key, value)
-    
-    def train(self):
-        rmse = self.evaluate()
-        self.mlflow_log_metric('rmse', rmse)
         
+
 if __name__ == "__main__":
     # get data
     # clean data
@@ -88,5 +91,6 @@ if __name__ == "__main__":
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
     trainer = Trainer(X_train, y_train)
+    trainer.set_experiment_name(EXPERIMENT_NAME)
     trainer.run()
     trainer.evaluate(X_test, y_test)
