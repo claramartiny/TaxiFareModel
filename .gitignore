@@ -1,12 +1,3 @@
-*/version.txt
-*.pyc
-*.swp
-build/
-dist/
-.coverage
+__pycache__/
+*.egg-info/
 .ipynb_checkpoints
-*.iml
-groupama/data/base_pno.*
-.DS_Store
-.idea/
-raw_data/
